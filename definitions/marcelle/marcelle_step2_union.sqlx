@@ -1,0 +1,27 @@
+config {
+  type: "table",
+  database: "jm-collect",
+  schema: "marcelle_dataform",
+  tags: ["marcelle"],
+  name: "marcelle_step2_union",
+  bigquery: {
+    partitionBy: "date",
+    clusterBy: ["data_source", "account_id"],
+    labels: { client: "marcelle" }
+  },
+  description: "Client: Groupe Marcelle. Union step - every Groupe Marcelle source for the processing window, standard columns only. Replaces marcelle_sr_etl.union_media (window only, rebuilt every run)."
+}
+
+-- Each source is selected BY COLUMN NAME (media.selectStandardColumns), so a source
+-- model returning its columns in another order cannot shift values.
+-- To add a source: create marcelle_step1_<source>.sqlx and add its name below.
+
+${
+  ["marcelle_step1_cm360",
+   "marcelle_step1_meta",
+   "marcelle_step1_tiktok",
+   "marcelle_step1_pinterest",
+   "marcelle_step1_yahoo"]
+    .map(name => media.selectStandardColumns(ref({schema: "marcelle_dataform", name})))
+    .join("\n\nUNION ALL\n\n")
+}

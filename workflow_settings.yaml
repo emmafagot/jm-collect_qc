@@ -1,0 +1,11 @@
+defaultProject: jm-collect
+defaultLocation: northamerica-northeast1
+defaultDataset: dataform
+defaultAssertionDataset: dataform_assertions
+dataformCoreVersion: 3.0.52
+
+# Compilation variables - one backfill variable per client.
+# Leave empty ("") for the normal daily run (rolling window).
+# Set a date ("YYYY-MM-DD") only for a manual backfill run, then set it back to "".
+vars:
+  marcelle_backfill_start: ""
