@@ -1,0 +1,24 @@
+config {
+  type: "table",
+  database: "jm-collect",
+  schema: "agropur_dataform",
+  tags: ["agropur"],
+  name: "agropur_step2_union",
+  bigquery: {
+    partitionBy: "date",
+    clusterBy: ["data_source", "account_id"],
+    labels: { client: "agropur" }
+  },
+  description: "Client: Agropur. Union step - every Agropur source for the processing window, standard columns only. Replaces agropur_sr_etl.union_media (window only, rebuilt every run)."
+}
+
+-- Each source is selected BY COLUMN NAME (media.selectStandardColumns), so a source
+-- model returning its columns in another order cannot shift values.
+-- To add a source: create agropur_step1_<source>.sqlx and add its name below.
+
+${
+  ["agropur_step1_cm360",
+   "agropur_step1_meta"]
+    .map(name => media.selectStandardColumns(ref({schema: "agropur_dataform", name})))
+    .join("\n\nUNION ALL\n\n")
+}

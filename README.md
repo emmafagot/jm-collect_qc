@@ -8,6 +8,7 @@ client's data.
 | Client          | Folder                  | Config                        | Tag        | Reads (raw)       | Writes              | Replaces                     |
 |-----------------|-------------------------|-------------------------------|------------|-------------------|---------------------|------------------------------|
 | Groupe Marcelle | `definitions/marcelle`  | `includes/marcelle_config.js` | `marcelle` | `marcelle_sr_etl` | `marcelle_dataform` | `marcelle_dash_ah_last_days` |
+| Agropur         | `definitions/agropur`   | `includes/agropur_config.js`  | `agropur`  | `agropur_sr_etl`  | `agropur_dataform`  | `agropur_dash_ah_last_days`  |
 
 ## Pipeline (per client)
 
