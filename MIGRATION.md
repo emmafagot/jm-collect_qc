@@ -9,7 +9,7 @@ repository, using Groupe Marcelle (`definitions/marcelle`) as the template. Read
 | Client | Tag | Scheduled query | Dataset (raw) | Raw tables found | Start date | Custom exclusions | Current final table | Status | Notes |
 |---|---|---|---|---|---|---|---|---|---|
 | Groupe Marcelle | `marcelle` | `marcelle_dash_ah_last_days` | `marcelle_sr_etl` | CM360, Meta, TikTok, Pinterest, Yahoo DSP | none in the saved queries (raw data from 2026-02-01) | CM360: `site <> 'yahoo dsp'` (Yahoo collected separately) | `dash_ah` | **Migrated** - backfilled from 2026-02-01, parity OK 2026-11-24, workflow `marcelle-daily` | Saved queries `marcelle_union` / `marcelle_dash_ah` checked: same clauses. Analytics Hub not repointed yet; scheduled query still running in parallel |
-| Agropur | `agropur` | `agropur_dash_ah_last_days` | `agropur_sr_etl` | CM360, Meta | none in the saved queries (raw data from 2026-01-15) | none (noise floor only; Yahoo DSP exclusion commented out in all three queries, so kept) | `dash_ah` | **Files ready** - pre-run parity (simulated backfill from 2026-01-15): 0 differences (CM360 2,257 rows, Meta 84 rows) | Three queries checked 2026-11-24: identical clauses. Meta delivery ends 2026-03-04. Next: commit, backfill from 2026-01-15, workflow `agropur-daily` |
+| Agropur | `agropur` | `agropur_dash_ah_last_days` | `agropur_sr_etl` | CM360, Meta | none in the saved queries (raw data from 2026-01-15) | none (noise floor only; Yahoo DSP exclusion commented out in all three queries, so kept) | `dash_ah` | **Migrated** - backfilled from 2026-01-15, parity OK 2026-11-24 (0 row-level differences), workflow `agropur-daily` | Three queries checked 2026-11-24: identical clauses. Meta delivery ends 2026-03-04. Analytics Hub not repointed yet; scheduled query still running in parallel |
 | Kombi | `kombi` | `kombi_dash_ah_last_days` | `kombi_sr_etl` | CM360, Meta, Meta conversions, TikTok | ? | ? | `dash_ah` | To do | `FBADS_METACONV_SR` (conversions) has no step1 model yet |
 | Unibroue | `unibroue` | `unibroue_dash_ah_last_days` | `unibroue_sr_etl` | CM360, Meta | ? | ? | `dash_ah` | To do | |
 | Nautilus | `nautilus` | `nautilus_dashboard_last_days` | `nautilus_sr_etl` | Meta, Google Ads L1 | ? | ? | `dashboard` | To do | Google Ads has no step1 model yet |
@@ -171,7 +171,10 @@ fix) before going further.
 ### 7. Schedule
 
 * Release configuration `production` (shared by all clients): branch `main`,
-  time zone `America/Toronto`, `0 6 * * *`.
+  time zone `America/Toronto`, `30 6 * * *`.
+* **Recompile the release first**: a workflow configuration only offers the tags of the
+  release's latest compilation. After pushing a new client, open the release
+  `production` and click **New compilation**, otherwise the client's tag is missing.
 * One workflow configuration per client: `<tag>-daily`, release `production`, tag
   `<tag>` only, time zone `America/Toronto`, after the release and after the
   Supermetrics refresh (e.g. `30 7 * * *`). No full refresh.
