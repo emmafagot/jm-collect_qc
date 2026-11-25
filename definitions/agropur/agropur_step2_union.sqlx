@@ -18,7 +18,8 @@ config {
 
 ${
   ["agropur_step1_cm360",
-   "agropur_step1_meta"]
+   "agropur_step1_meta",
+   "agropur_step1_miq"]
     .map(name => media.selectStandardColumns(ref({schema: "agropur_dataform", name})))
     .join("\n\nUNION ALL\n\n")
 }

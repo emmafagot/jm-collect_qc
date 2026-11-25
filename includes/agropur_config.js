@@ -56,6 +56,12 @@ const windowStart = backfillStartDate
 // Meta: cost > 0.
 const cm360ExcludeYahooDsp = false;
 
+// MiQ (social bought through the partner MiQ, shared table partner_miq): only these
+// profiles belong to Agropur. Added 2026-11-25, data from 2026-11-11.
+const miqProfileIds = [
+  "1158291872860375" // Meta - Agropur_Jungle+MiQ
+];
+
 // -------------------------------------------------------------------------------------
 // Shortcode labels
 // -------------------------------------------------------------------------------------
@@ -72,5 +78,6 @@ module.exports = {
   backfillStartDate,
   windowStart,
   cm360ExcludeYahooDsp,
+  miqProfileIds,
   shortcodeClientName
 };

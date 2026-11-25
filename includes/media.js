@@ -76,7 +76,8 @@ function agencyDeskLabelEn(codeColumn, mediaboxLabelColumn) {
 }
 
 // Media type (channel group) derived from the data source and the publisher code.
-const socialSources = ["meta", "linkedin", "x", "twitter", "snapchat", "pinterest", "tiktok", "reddit"];
+// "miq" = social campaigns bought through the partner MiQ (Meta, Reddit...).
+const socialSources = ["meta", "miq", "linkedin", "x", "twitter", "snapchat", "pinterest", "tiktok", "reddit"];
 const programmaticPublishers = [
   "adb-snp", "ask-loc", "aut-gnl", "cni-gnl", "dax-gnl", "fue-gnl", "ggl-gnl", "glassview",
   "gmg-gnl", "idn-gnl", "illumin", "inmark", "ipd-gnl", "mgn-gnl", "miq-gnl", "msa-gnl",

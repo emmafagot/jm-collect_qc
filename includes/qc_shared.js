@@ -13,11 +13,22 @@ const shortcodes = {
   name: "shortcodes"
 };
 
+// MiQ (partner) social delivery - one row per (date, profile, campaign, ad set, ad,
+// publisher platform, placement) for ALL clients of the partner. Each client reads it
+// only through its own <client>_step1_miq model, filtered on that client's profile IDs.
+// The table keeps every row ever received (MiQ does not always resend old rows).
+const miqDelivery = {
+  database: "jm-collect",
+  schema: "partner_miq",
+  name: "agg_miq_delivery_raw_data"
+};
+
 // Agency-wide lists: a client inherits a list from here only when it has no list of
 // the same name of its own.
 const agencyShortcodeClient = "plusco";
 
 module.exports = {
   shortcodes,
+  miqDelivery,
   agencyShortcodeClient
 };
