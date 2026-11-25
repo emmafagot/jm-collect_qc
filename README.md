@@ -9,6 +9,7 @@ client's data.
 |-----------------|-------------------------|-------------------------------|------------|-------------------|---------------------|------------------------------|
 | Groupe Marcelle | `definitions/marcelle`  | `includes/marcelle_config.js` | `marcelle` | `marcelle_sr_etl` | `marcelle_dataform` | `marcelle_dash_ah_last_days` |
 | Agropur         | `definitions/agropur`   | `includes/agropur_config.js`  | `agropur`  | `agropur_sr_etl`  | `agropur_dataform`  | `agropur_dash_ah_last_days`  |
+| Unibroue        | `definitions/unibroue`  | `includes/unibroue_config.js` | `unibroue` | `unibroue_sr_etl` | `unibroue_dataform` | `unibroue_dash_ah_last_days` |
 
 ## Pipeline (per client)
 
@@ -100,3 +101,20 @@ backfill from the earliest date you want in the table.
   query meant to exclude these rows but never did (AND / OR precedence).
 * **TikTok views** – 2-second views (`video_watched_2s`); were 0 in the scheduled query.
 * **TikTok account** – `account_id` / `account` un-swapped.
+
+## Decisions (Agropur, 2026-11-25)
+
+* **MiQ source** – `agropur_step1_miq` reads the shared partner table
+  `jm-collect.partner_miq.agg_miq_delivery_raw_data` (declared once in
+  `definitions/0_shared`), filtered on `agropur_config.miqProfileIds`
+  (`1158291872860375`, Meta - Agropur_Jungle+MiQ). Modelled on the MIQ CTE of
+  `eplv_dash_ah_last_days` (cm-collect): `data_source = 'miq'`, publisher = platform
+  (`meta`), inventory = publisher platform (`unknown` → `Meta`), media type Social.
+  Views = 3-second video views (the eplv query leaves them at 0). Not in the
+  scheduled query's `dash_ah`, so it is expected only in the Dataform dashboard.
+
+## Decisions (Unibroue, 2026-11-25)
+
+* **Yahoo DSP in CM360** – excluded (`cm360ExcludeYahooDsp = true`), as the scheduled
+  query intended (its clause was bypassed by AND / OR precedence). Unibroue has no
+  Yahoo source, so this delivery (370 rows / $5,884 in `dash_ah`) leaves the dashboard.
