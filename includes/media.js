@@ -47,14 +47,20 @@ const metrics = [
   "viewable_impressions", "measurable_impressions"
 ];
 
+// Optional client-specific metrics (e.g. conversions): a client lists them in its config
+// (extraMetrics) and passes that list to the helpers below. Every step1 model of that
+// client must then return them too (0 when the source has none). Clients without
+// extra metrics call the helpers without it and keep the standard schema.
+
 // SELECT <every standard column> FROM <table> - used by step2 for each source.
-function selectStandardColumns(table) {
-  return `SELECT\n  ${unionDimensions.concat(metrics).join(",\n  ")}\nFROM ${table}`;
+function selectStandardColumns(table, extraMetrics = []) {
+  const columns = unionDimensions.concat(metrics, extraMetrics);
+  return `SELECT\n  ${columns.join(",\n  ")}\nFROM ${table}`;
 }
 
 // "SUM(m) AS m" for every metric (optionally cast to INT64 except media_spend).
-function sumMetrics(castToInt = false) {
-  return metrics
+function sumMetrics(castToInt = false, extraMetrics = []) {
+  return metrics.concat(extraMetrics)
     .map(m => (castToInt && m !== "media_spend")
       ? `CAST(SUM(${m}) AS INT64) AS ${m}`
       : `SUM(${m}) AS ${m}`)

@@ -1,0 +1,24 @@
+config {
+  type: "table",
+  database: "jm-collect",
+  schema: "kombi_dataform",
+  tags: ["kombi"],
+  name: "kombi_step2_union",
+  bigquery: {
+    partitionBy: "date",
+    clusterBy: ["data_source", "account_id"],
+    labels: { client: "kombi" }
+  },
+  description: "Client: Kombi Sports. Union step - every Kombi Sports source for the processing window, standard columns only. Replaces kombi_sr_etl.union_media (window only, rebuilt every run)."
+}
+
+-- Each source is selected BY COLUMN NAME (media.selectStandardColumns), so a source
+-- model returning its columns in another order cannot shift values.
+-- To add a source: create kombi_step1_<source>.sqlx and add its name below.
+
+${
+  ["kombi_step1_meta",
+   "kombi_step1_tiktok"]
+    .map(name => media.selectStandardColumns(ref({schema: "kombi_dataform", name}), kombi_config.extraMetrics))
+    .join("\n\nUNION ALL\n\n")
+}

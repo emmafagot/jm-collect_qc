@@ -11,6 +11,7 @@ client's data.
 | Agropur         | `definitions/agropur`   | `includes/agropur_config.js`  | `agropur`  | `agropur_sr_etl`  | `agropur_dataform`  | `agropur_dash_ah_last_days`  |
 | Unibroue        | `definitions/unibroue`  | `includes/unibroue_config.js` | `unibroue` | `unibroue_sr_etl` | `unibroue_dataform` | `unibroue_dash_ah_last_days` |
 | Nautilus Plus   | `definitions/nautilus`  | `includes/nautilus_config.js` | `nautilus` | `nautilus_sr_etl` | `nautilus_dataform` | `nautilus_dashboard_last_days` |
+| Kombi Sports    | `definitions/kombi`     | `includes/kombi_config.js`    | `kombi`    | `kombi_sr_etl`    | `kombi_dataform`    | `kombi_dash_ah_last_days`    |
 
 ## Pipeline (per client)
 
@@ -126,3 +127,14 @@ backfill from the earliest date you want in the table.
   `marcelle_config.miqProfileIds` (`a2_jvm0nh884j56`, Reddit - Groupe Marcelle
   Inc_Jungle+MiQ): publisher `reddit`, inventory `Reddit`, media type Social. Data from
   2026-10-29. Not in the scheduled query's `dash_ah`.
+
+## Decisions (Kombi Sports, 2026-11-25)
+
+* **Client-specific metrics** – `kombi_config.extraMetrics` adds Meta conversion
+  columns to every Kombi step (`media.selectStandardColumns` / `media.sumMetrics` take
+  an optional extra-metric list; other clients keep the standard schema).
+* **Meta conversions** – one column per action type, named after the type so other
+  sources can fill them later: `purchase`, `add_to_cart`, `lead`, plus `purchase_value`. The scheduled query used one `conversions` column
+  with a single `Nom_conversion` (MAX), so rows holding several types were summed
+  under one name (223 "purchases" instead of 137).
+* **TikTok** – same as Groupe Marcelle: views = 2-second views, account un-swapped.
