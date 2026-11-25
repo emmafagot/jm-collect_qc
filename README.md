@@ -13,6 +13,8 @@ client's data.
 | Nautilus Plus   | `definitions/nautilus`  | `includes/nautilus_config.js` | `nautilus` | `nautilus_sr_etl` | `nautilus_dataform` | `nautilus_dashboard_last_days` |
 | Kombi Sports    | `definitions/kombi`     | `includes/kombi_config.js`    | `kombi`    | `kombi_sr_etl`    | `kombi_dataform`    | `kombi_dash_ah_last_days`    |
 | Café William    | `definitions/cafewilliam` | `includes/cafewilliam_config.js` | `cafewilliam` | `partner_miq` (shared, filtered) | `cafewilliam_dataform` | `cafewilliam_dashboard_last_days` |
+| Hubblo          | `definitions/hubblo`    | `includes/hubblo_config.js`   | `hubblo`   | `partner_miq` (shared, filtered) | `hubblo_dataform`   | – (new client)               |
+| Trema           | `definitions/trema`     | `includes/trema_config.js`    | `trema`    | `partner_miq` (shared, filtered) | `trema_dataform`    | – (new client)               |
 
 ## Pipeline (per client)
 
@@ -148,3 +150,12 @@ backfill from the earliest date you want in the table.
   query used `tax_split` ("_") while the saved `cafewilliam_union` used `jm_tax_split`,
   so its last 30 days lost the dimensions of the campaigns named with "|".
 * **Views** – MiQ video views (`action_video_view`); were 0 in the scheduled query.
+
+## Decisions (2026-11-25, MiQ)
+
+* **Agropur** – MiQ profile `2442178479542270` (Meta - Natrel_Jungle+MiQ) added to
+  `agropur_config.miqProfileIds` (data 2026-08-24 to 2026-09-18).
+* **Hubblo, Trema** – new clients, never built in BigQuery: MiQ is their only source, no
+  `<client>_sr_etl` dataset and no scheduled query. Same model as Café William; they
+  write only to `<tag>_dataform`. Mediabox client names: `hubblo`; none for Trema yet
+  (labels from the plusco lists).

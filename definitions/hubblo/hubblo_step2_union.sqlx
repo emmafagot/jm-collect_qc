@@ -1,0 +1,23 @@
+config {
+  type: "table",
+  database: "jm-collect",
+  schema: "hubblo_dataform",
+  tags: ["hubblo"],
+  name: "hubblo_step2_union",
+  bigquery: {
+    partitionBy: "date",
+    clusterBy: ["data_source", "account_id"],
+    labels: { client: "hubblo" }
+  },
+  description: "Client: Hubblo. Union step - every Hubblo source for the processing window, standard columns only. Window only, rebuilt every run."
+}
+
+-- Each source is selected BY COLUMN NAME (media.selectStandardColumns), so a source
+-- model returning its columns in another order cannot shift values.
+-- To add a source: create hubblo_step1_<source>.sqlx and add its name below.
+
+${
+  ["hubblo_step1_miq"]
+    .map(name => media.selectStandardColumns(ref({schema: "hubblo_dataform", name})))
+    .join("\n\nUNION ALL\n\n")
+}

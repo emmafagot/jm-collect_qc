@@ -57,9 +57,10 @@ const windowStart = backfillStartDate
 const cm360ExcludeYahooDsp = false;
 
 // MiQ (social bought through the partner MiQ, shared table partner_miq): only these
-// profiles belong to Agropur. Added 2026-11-25, data from 2026-11-11.
+// profiles belong to Agropur (Agropur brands included).
 const miqProfileIds = [
-  "1158291872860375" // Meta - Agropur_Jungle+MiQ
+  "1158291872860375", // Meta - Agropur_Jungle+MiQ (added 2026-11-25, data from 2026-11-11)
+  "2442178479542270"  // Meta - Natrel_Jungle+MiQ (added 2026-11-25, data 2026-08-24 to 2026-09-18)
 ];
 
 // -------------------------------------------------------------------------------------

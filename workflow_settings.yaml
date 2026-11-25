@@ -16,3 +16,5 @@ vars:
   nautilus_backfill_start: ""     # full history: "2026-09-01"
   kombi_backfill_start: ""        # full history: "2026-03-30"
   cafewilliam_backfill_start: ""  # full history: "2026-08-31"
+  hubblo_backfill_start: ""       # full history: "2026-04-08"
+  trema_backfill_start: ""        # full history: "2026-06-16"
