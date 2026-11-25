@@ -10,6 +10,7 @@ client's data.
 | Groupe Marcelle | `definitions/marcelle`  | `includes/marcelle_config.js` | `marcelle` | `marcelle_sr_etl` | `marcelle_dataform` | `marcelle_dash_ah_last_days` |
 | Agropur         | `definitions/agropur`   | `includes/agropur_config.js`  | `agropur`  | `agropur_sr_etl`  | `agropur_dataform`  | `agropur_dash_ah_last_days`  |
 | Unibroue        | `definitions/unibroue`  | `includes/unibroue_config.js` | `unibroue` | `unibroue_sr_etl` | `unibroue_dataform` | `unibroue_dash_ah_last_days` |
+| Nautilus Plus   | `definitions/nautilus`  | `includes/nautilus_config.js` | `nautilus` | `nautilus_sr_etl` | `nautilus_dataform` | `nautilus_dashboard_last_days` |
 
 ## Pipeline (per client)
 

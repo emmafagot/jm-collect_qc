@@ -1,0 +1,116 @@
+config {
+  type: "table",
+  database: "jm-collect",
+  schema: "nautilus_dataform",
+  tags: ["nautilus"],
+  name: "nautilus_step1_googleads_l1",
+  bigquery: { labels: { client: "nautilus" } },
+  description: "Client: Nautilus Plus. Source step - Google Ads campaign-level delivery (Search / Performance Max / Shopping) for the processing window, mapped to the standard columns (includes/media.js). Port of the GAD1 CTE of nautilus_dashboard_last_days."
+}
+
+-- Rows kept: cost > 0, campaign types in nautilus_config.googleAdsChannelTypes, old
+-- campaigns in nautilus_config.googleAdsExcludedCampaignIds removed, inside the
+-- processing window.
+-- Campaign level only: no ad group / ad, so levels 2-3 and their tokens are empty.
+-- The Search naming convention packs the ad set tokens into the campaign name:
+--   0 targeting details | 1 product | 2 language | 3 market | 4 placement location |
+--   5 objective | 6 campaign identifier | 7 publisher | 8 channel | 9 client |
+--   10 line of business | 11 external id | 12 billing id
+
+SELECT
+  date                                                    AS date,
+  'googleads_l1'                                          AS data_source,
+  COALESCE(profile_id, '')                                AS account_id,
+  COALESCE(profile, '')                                   AS account,
+  COALESCE(profile_id, '')                                AS advertiser_id,
+  COALESCE(profile, '')                                   AS advertiser,
+  COALESCE(campaign_id, '')                               AS level_1_id,
+  COALESCE(campaign_name, '')                             AS level_1,
+  ''                                                      AS level_2_id,
+  ''                                                      AS level_2,
+  ''                                                      AS level_3_id,
+  ''                                                      AS level_3,
+  ''                                                      AS plt_publisher_id,
+  -- Google network the ad ran on (Search Network, YouTube, Google Maps...).
+  COALESCE(network, '')                                   AS plt_publisher,
+  COALESCE(advertising_channel_type, '')                  AS campaign_type,
+  COALESCE(currency, '')                                  AS currency,
+
+  -- ------------------------------------------------------------ Campaign name tokens --
+  functions.jm_tax_split(campaign_name, 9)                AS client,
+  functions.jm_tax_split(campaign_name, 10)               AS l1_lob,
+  functions.jm_tax_split(campaign_name, 6)                AS campaign_identifier,
+  ''                                                      AS l1_objective,
+  ''                                                      AS l1_year,
+  functions.jm_tax_split(campaign_name, 11)               AS external_id,
+  functions.jm_tax_split(campaign_name, 12)               AS billing_id,
+
+  functions.jm_tax_split(campaign_name, 5)                AS l2_objective,
+  functions.jm_tax_split(campaign_name, 1)                AS l2_product,
+  ''                                                      AS l2_lob,
+  ''                                                      AS l2_campaign_identifier,
+  functions.jm_tax_split(campaign_name, 7)                AS publisher,
+  functions.jm_tax_split(campaign_name, 8)                AS channel,
+  functions.jm_tax_split(campaign_name, 4)                AS placement_location,
+  ''                                                      AS audience,
+  functions.jm_tax_split(campaign_name, 2)                AS l2_language,
+  ''                                                      AS targeting,
+  functions.jm_tax_split(campaign_name, 0)                AS targeting_details,
+  functions.jm_tax_split(campaign_name, 3)                AS market,
+  ''                                                      AS market_details,
+  ''                                                      AS device,
+  ''                                                      AS buying_type,
+  ''                                                      AS l2_creative_grouping,
+  -- Inventory = the Google network.
+  COALESCE(network, '')                                   AS inventory,
+
+  -- ------------------------------------------------- Ad tokens (none at campaign level) --
+  ''                                                      AS creative_product_message,
+  ''                                                      AS version,
+  ''                                                      AS format,
+  ''                                                      AS format_details,
+  ''                                                      AS l3_language,
+  ''                                                      AS l3_creative_grouping,
+  ''                                                      AS cta,
+  ''                                                      AS creative_flight_dates,
+  ''                                                      AS l3_campaign_identifier,
+  ''                                                      AS l3_lob,
+
+  -- --------------------------------------------------------------------- Metrics --
+  SUM(COALESCE(cost, 0))                                  AS media_spend,
+  SUM(COALESCE(impressions, 0))                           AS impressions,
+  SUM(COALESCE(clicks, 0))                                AS clicks,
+
+  SUM(COALESCE(video_quartile_25_views, 0))               AS video_completion_25,
+  SUM(COALESCE(video_quartile_50_views, 0))               AS video_completion_50,
+  SUM(COALESCE(video_quartile_75_views, 0))               AS video_completion_75,
+  0                                                       AS video_completion_95,
+  SUM(COALESCE(video_quartile_100_views, 0))              AS video_completion_100,
+  -- Views: Google Ads video views.
+  SUM(COALESCE(videoviews, 0))                            AS video_views,
+
+  0                                                       AS audio_completion_25,
+  0                                                       AS audio_completion_50,
+  0                                                       AS audio_completion_75,
+  0                                                       AS audio_completion_100,
+  0                                                       AS audio_views,
+
+  0                                                       AS post_likes,
+  SUM(COALESCE(engagements, 0))                           AS post_engagements,
+  0                                                       AS post_reactions,
+  0                                                       AS post_comments,
+  0                                                       AS post_saves,
+  0                                                       AS post_shares,
+  0                                                       AS carousel_swipes,
+  0                                                       AS follows,
+  SUM(COALESCE(lost_impressions, 0))                      AS lost_impressions,
+  SUM(COALESCE(available_impressions, 0))                 AS available_impressions,
+  SUM(COALESCE(active_view_impressions, 0))               AS viewable_impressions,
+  SUM(COALESCE(active_view_measurable_impressions, 0))    AS measurable_impressions
+
+FROM ${ref({schema: nautilus_config.sourceDataset, name: "GOOGLEADS_GADL1_SR"})}
+WHERE date >= ${nautilus_config.windowStart}
+  AND cost > 0
+  AND LOWER(advertising_channel_type) IN (${nautilus_config.googleAdsChannelTypes.map(t => `'${t}'`).join(", ")})
+  AND campaign_id NOT IN (${nautilus_config.googleAdsExcludedCampaignIds.map(id => `'${id}'`).join(", ")})
+GROUP BY ALL

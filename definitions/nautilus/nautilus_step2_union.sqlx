@@ -1,0 +1,24 @@
+config {
+  type: "table",
+  database: "jm-collect",
+  schema: "nautilus_dataform",
+  tags: ["nautilus"],
+  name: "nautilus_step2_union",
+  bigquery: {
+    partitionBy: "date",
+    clusterBy: ["data_source", "account_id"],
+    labels: { client: "nautilus" }
+  },
+  description: "Client: Nautilus Plus. Union step - every Nautilus Plus source for the processing window, standard columns only. Replaces nautilus_sr_etl.union_media (window only, rebuilt every run)."
+}
+
+-- Each source is selected BY COLUMN NAME (media.selectStandardColumns), so a source
+-- model returning its columns in another order cannot shift values.
+-- To add a source: create nautilus_step1_<source>.sqlx and add its name below.
+
+${
+  ["nautilus_step1_meta",
+   "nautilus_step1_googleads_l1"]
+    .map(name => media.selectStandardColumns(ref({schema: "nautilus_dataform", name})))
+    .join("\n\nUNION ALL\n\n")
+}
