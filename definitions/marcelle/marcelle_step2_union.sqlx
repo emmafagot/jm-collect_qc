@@ -21,7 +21,8 @@ ${
    "marcelle_step1_meta",
    "marcelle_step1_tiktok",
    "marcelle_step1_pinterest",
-   "marcelle_step1_yahoo"]
+   "marcelle_step1_yahoo",
+   "marcelle_step1_miq"]
     .map(name => media.selectStandardColumns(ref({schema: "marcelle_dataform", name})))
     .join("\n\nUNION ALL\n\n")
 }

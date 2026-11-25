@@ -118,3 +118,10 @@ backfill from the earliest date you want in the table.
 * **Yahoo DSP in CM360** – excluded (`cm360ExcludeYahooDsp = true`), as the scheduled
   query intended (its clause was bypassed by AND / OR precedence). Unibroue has no
   Yahoo source, so this delivery (370 rows / $5,884 in `dash_ah`) leaves the dashboard.
+
+## Decisions (Groupe Marcelle, 2026-11-25)
+
+* **MiQ source** – `marcelle_step1_miq`, same model as Agropur, filtered on
+  `marcelle_config.miqProfileIds` (`a2_jvm0nh884j56`, Reddit - Groupe Marcelle
+  Inc_Jungle+MiQ): publisher `reddit`, inventory `Reddit`, media type Social. Data from
+  2026-10-29. Not in the scheduled query's `dash_ah`.

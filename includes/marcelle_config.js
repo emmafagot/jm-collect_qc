@@ -59,6 +59,12 @@ const cm360ExcludeYahooDsp = true;
 const yahooAccountId = "2340";
 const yahooAccountName = "Jungle Media Canada";
 
+// MiQ (social bought through the partner MiQ, shared table partner_miq): only these
+// profiles belong to Groupe Marcelle. Added 2026-11-25, data from 2026-10-27.
+const miqProfileIds = [
+  "a2_jvm0nh884j56" // Reddit - Groupe Marcelle Inc_Jungle+MiQ
+];
+
 // -------------------------------------------------------------------------------------
 // Shortcode labels
 // -------------------------------------------------------------------------------------
@@ -77,5 +83,6 @@ module.exports = {
   cm360ExcludeYahooDsp,
   yahooAccountId,
   yahooAccountName,
+  miqProfileIds,
   shortcodeClientName
 };
