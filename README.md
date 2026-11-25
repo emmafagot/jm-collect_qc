@@ -12,6 +12,7 @@ client's data.
 | Unibroue        | `definitions/unibroue`  | `includes/unibroue_config.js` | `unibroue` | `unibroue_sr_etl` | `unibroue_dataform` | `unibroue_dash_ah_last_days` |
 | Nautilus Plus   | `definitions/nautilus`  | `includes/nautilus_config.js` | `nautilus` | `nautilus_sr_etl` | `nautilus_dataform` | `nautilus_dashboard_last_days` |
 | Kombi Sports    | `definitions/kombi`     | `includes/kombi_config.js`    | `kombi`    | `kombi_sr_etl`    | `kombi_dataform`    | `kombi_dash_ah_last_days`    |
+| Café William    | `definitions/cafewilliam` | `includes/cafewilliam_config.js` | `cafewilliam` | `partner_miq` (shared, filtered) | `cafewilliam_dataform` | `cafewilliam_dashboard_last_days` |
 
 ## Pipeline (per client)
 
@@ -138,3 +139,12 @@ backfill from the earliest date you want in the table.
   with a single `Nom_conversion` (MAX), so rows holding several types were summed
   under one name (223 "purchases" instead of 137).
 * **TikTok** – same as Groupe Marcelle: views = 2-second views, account un-swapped.
+
+## Decisions (Café William, 2026-11-25)
+
+* **MiQ only** – `cafewilliam_step1_miq` reads the shared MiQ table, filtered on the Meta
+  and TikTok profiles of `cafewilliam_config.miqProfileIds`. No other source.
+* **Taxonomy split** – `jm_tax_split` ("|") like every jm-collect client. The scheduled
+  query used `tax_split` ("_") while the saved `cafewilliam_union` used `jm_tax_split`,
+  so its last 30 days lost the dimensions of the campaigns named with "|".
+* **Views** – MiQ video views (`action_video_view`); were 0 in the scheduled query.

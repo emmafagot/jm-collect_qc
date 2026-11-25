@@ -1,0 +1,23 @@
+config {
+  type: "table",
+  database: "jm-collect",
+  schema: "cafewilliam_dataform",
+  tags: ["cafewilliam"],
+  name: "cafewilliam_step2_union",
+  bigquery: {
+    partitionBy: "date",
+    clusterBy: ["data_source", "account_id"],
+    labels: { client: "cafewilliam" }
+  },
+  description: "Client: Café William. Union step - every Café William source for the processing window, standard columns only. Replaces cafewilliam_sr_etl.union_media (window only, rebuilt every run)."
+}
+
+-- Each source is selected BY COLUMN NAME (media.selectStandardColumns), so a source
+-- model returning its columns in another order cannot shift values.
+-- To add a source: create cafewilliam_step1_<source>.sqlx and add its name below.
+
+${
+  ["cafewilliam_step1_miq"]
+    .map(name => media.selectStandardColumns(ref({schema: "cafewilliam_dataform", name})))
+    .join("\n\nUNION ALL\n\n")
+}

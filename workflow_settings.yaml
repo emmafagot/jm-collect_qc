@@ -7,9 +7,12 @@ dataformCoreVersion: 3.0.52
 # Compilation variables - one backfill variable per client.
 # Leave empty ("") for the normal daily run (rolling window).
 # Set a date ("YYYY-MM-DD") only for a manual backfill run, then set it back to "".
+# The date in each comment is the start of the full history (first backfill): use it to
+# rebuild the whole dashboard, or a later date to rebuild only the recent part.
 vars:
-  marcelle_backfill_start: ""
-  agropur_backfill_start: ""
-  unibroue_backfill_start: ""
-  nautilus_backfill_start: ""
-  kombi_backfill_start: ""
+  marcelle_backfill_start: ""     # full history: "2026-02-01"
+  agropur_backfill_start: ""      # full history: "2026-01-15"
+  unibroue_backfill_start: ""     # full history: "2026-03-09"
+  nautilus_backfill_start: ""     # full history: "2026-09-01"
+  kombi_backfill_start: ""        # full history: "2026-03-30"
+  cafewilliam_backfill_start: ""  # full history: "2026-08-31"
