@@ -18,3 +18,4 @@ vars:
   cafewilliam_backfill_start: ""  # full history: "2026-08-31"
   hubblo_backfill_start: ""       # full history: "2026-04-08"
   trema_backfill_start: ""        # full history: "2026-06-16"
+  intelcom_backfill_start: ""     # full history: "2026-09-01"

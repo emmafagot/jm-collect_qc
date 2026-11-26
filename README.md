@@ -15,6 +15,7 @@ client's data.
 | Café William    | `definitions/cafewilliam` | `includes/cafewilliam_config.js` | `cafewilliam` | `partner_miq` (shared, filtered) | `cafewilliam_dataform` | `cafewilliam_dashboard_last_days` |
 | Hubblo          | `definitions/hubblo`    | `includes/hubblo_config.js`   | `hubblo`   | `partner_miq` (shared, filtered) | `hubblo_dataform`   | – (new client)               |
 | Trema           | `definitions/trema`     | `includes/trema_config.js`    | `trema`    | `partner_miq` (shared, filtered) | `trema_dataform`    | – (new client)               |
+| Intelcom Dragonfly | `definitions/intelcom` | `includes/intelcom_config.js` | `intelcom` | `intelcom_sr_etl` + `partner_miq` (shared, filtered) | `intelcom_dataform` | – (new client) |
 
 ## Pipeline (per client)
 
@@ -159,3 +160,14 @@ backfill from the earliest date you want in the table.
   `<client>_sr_etl` dataset and no scheduled query. Same model as Café William; they
   write only to `<tag>_dataform`. Mediabox client names: `hubblo`; none for Trema yet
   (labels from the plusco lists).
+
+## Decisions (Intelcom Dragonfly, 2026-11-26)
+
+* **New client** – never built in BigQuery (no scheduled query, no `union_media` /
+  `dashboard`). Sources: Google Ads L1 (`intelcom_sr_etl.GOOGLEADS_GADL1_SR`, same model
+  as Nautilus) and MiQ (Meta, LinkedIn, Reddit profiles of `intelcom_config.miqProfileIds`).
+* **MiQ LinkedIn** – LinkedIn ad set names start with one extra token, so every ad set
+  token is read one position further for LinkedIn rows (as in the eplv query). Placement
+  = token 7 for LinkedIn (the eplv fallback to token 5 is not kept: it returns MIQ-GNL).
+* **Google Ads publisher fallback** – `ggl-ads` when the campaign-name token is empty, so
+  campaigns not named with the convention keep the SEM media type instead of Direct.
