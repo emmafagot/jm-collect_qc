@@ -1,0 +1,120 @@
+config {
+  type: "table",
+  database: "jm-collect",
+  schema: "cqts_dataform",
+  tags: ["cqts"],
+  name: "cqts_step1_cm360",
+  bigquery: { labels: { client: "cqts" } },
+  description: "Client: CQTS. Source step - CM360 delivery for the processing window, mapped to the standard columns (includes/media.js). Same model as cqts_step1_cm360 (client never built in BigQuery before Dataform)."
+}
+
+-- Rows kept: delivery above the noise floor (spend, > 10 impressions or > 5 clicks),
+-- inside the processing window, optionally without Yahoo DSP (see cqts_config).
+-- functions.jm_tax_split(name, n) = lower-cased, trimmed n-th '|' token ('' if missing).
+
+SELECT
+  date                                                    AS date,
+  'cm360'                                                 AS data_source,
+  COALESCE(CAST(account_id AS STRING), '')                AS account_id,
+  COALESCE(account, '')                                   AS account,
+  COALESCE(CAST(advertiser_id AS STRING), '')             AS advertiser_id,
+  COALESCE(advertiser, '')                                AS advertiser,
+  COALESCE(CAST(campaign_id AS STRING), '')               AS level_1_id,
+  COALESCE(campaign, '')                                  AS level_1,
+  COALESCE(CAST(placement_id AS STRING), '')              AS level_2_id,
+  COALESCE(placement, '')                                 AS level_2,
+  COALESCE(CAST(creative_id AS STRING), '')               AS level_3_id,
+  COALESCE(creative, '')                                  AS level_3,
+  COALESCE(site_id, '')                                   AS plt_publisher_id,
+  COALESCE(site, '')                                      AS plt_publisher,
+  ''                                                      AS campaign_type,
+  ''                                                      AS currency,
+
+  -- ------------------------------------------------------------ Campaign name tokens --
+  functions.jm_tax_split(campaign, 0)                     AS client,
+  functions.jm_tax_split(campaign, 1)                     AS l1_lob,
+  functions.jm_tax_split(campaign, 2)                     AS campaign_identifier,
+  functions.jm_tax_split(campaign, 3)                     AS l1_objective,
+  functions.jm_tax_split(campaign, 4)                     AS l1_year,
+  functions.jm_tax_split(campaign, 5)                     AS external_id,
+  functions.jm_tax_split(campaign, 6)                     AS billing_id,
+
+  -- ----------------------------------------------------------- Placement name tokens --
+  functions.jm_tax_split(placement, 0)                    AS l2_objective,
+  functions.jm_tax_split(placement, 1)                    AS l2_product,
+  functions.jm_tax_split(placement, 2)                    AS l2_lob,
+  functions.jm_tax_split(placement, 3)                    AS l2_campaign_identifier,
+  functions.jm_tax_split(placement, 4)                    AS publisher,
+  functions.jm_tax_split(placement, 5)                    AS channel,
+  -- Token 6 is "<inventory>_<placement location>" or just the placement location.
+  IF(STRPOS(functions.jm_tax_split(placement, 6), '_') > 0,
+     TRIM(SPLIT(LOWER(functions.jm_tax_split(placement, 6)), '_')[SAFE_OFFSET(1)]),
+     functions.jm_tax_split(placement, 6))                AS placement_location,
+  functions.jm_tax_split(placement, 7)                    AS audience,
+  functions.jm_tax_split(placement, 8)                    AS l2_language,
+  functions.jm_tax_split(placement, 9)                    AS targeting,
+  functions.jm_tax_split(placement, 10)                   AS targeting_details,
+  functions.jm_tax_split(placement, 11)                   AS market,
+  functions.jm_tax_split(placement, 12)                   AS market_details,
+  functions.jm_tax_split(placement, 13)                   AS device,
+  functions.jm_tax_split(placement, 14)                   AS buying_type,
+  functions.jm_tax_split(placement, 15)                   AS l2_creative_grouping,
+  IF(STRPOS(functions.jm_tax_split(placement, 6), '_') > 0,
+     TRIM(SPLIT(LOWER(functions.jm_tax_split(placement, 6)), '_')[SAFE_OFFSET(0)]),
+     '')                                                  AS inventory,
+
+  -- ------------------------------------------------------------ Creative name tokens --
+  functions.jm_tax_split(creative, 0)                     AS creative_product_message,
+  functions.jm_tax_split(creative, 1)                     AS version,
+  functions.jm_tax_split(creative, 2)                     AS format,
+  functions.jm_tax_split(creative, 3)                     AS format_details,
+  functions.jm_tax_split(creative, 4)                     AS l3_language,
+  functions.jm_tax_split(creative, 5)                     AS l3_creative_grouping,
+  functions.jm_tax_split(creative, 6)                     AS cta,
+  functions.jm_tax_split(creative, 7)                     AS creative_flight_dates,
+  functions.jm_tax_split(creative, 8)                     AS l3_campaign_identifier,
+  functions.jm_tax_split(creative, 9)                     AS l3_lob,
+
+  -- --------------------------------------------------------------------- Metrics --
+  -- Spend: DV360 cost when the placement is bought through DV360, else CM360 media cost.
+  IF(SUM(COALESCE(dv_360_cost, 0)) > 0,
+     SUM(COALESCE(dv_360_cost, 0)),
+     SUM(COALESCE(media_cost, 0)))                        AS media_spend,
+  SUM(COALESCE(impressions, 0))                           AS impressions,
+  SUM(COALESCE(clicks, 0))                                AS clicks,
+
+  SUM(COALESCE(rich_media_video_first_quartile_completes, 0)) AS video_completion_25,
+  SUM(COALESCE(rich_media_video_midpoints, 0))            AS video_completion_50,
+  SUM(COALESCE(rich_media_video_third_quartile_completes, 0)) AS video_completion_75,
+  0                                                       AS video_completion_95,
+  SUM(COALESCE(rich_media_video_completions, 0))          AS video_completion_100,
+  -- Views: TrueView views when there are any, else rich-media video views.
+  IF(SUM(COALESCE(rich_media_true_view_views, 0)) > 0,
+     SUM(COALESCE(rich_media_true_view_views, 0)),
+     SUM(COALESCE(rich_media_video_views, 0)))            AS video_views,
+
+  SUM(COALESCE(rich_media_audio_first_quartile_completes, 0)) AS audio_completion_25,
+  SUM(COALESCE(rich_media_audio_midpoints, 0))            AS audio_completion_50,
+  SUM(COALESCE(rich_media_audio_third_quartile_completes, 0)) AS audio_completion_75,
+  SUM(COALESCE(rich_media_audio_completions, 0))          AS audio_completion_100,
+  -- CM360 has no audio "views" metric: audio plays are used.
+  SUM(COALESCE(rich_media_audio_plays, 0))                AS audio_views,
+
+  0                                                       AS post_likes,
+  0                                                       AS post_engagements,
+  0                                                       AS post_reactions,
+  0                                                       AS post_comments,
+  0                                                       AS post_saves,
+  0                                                       AS post_shares,
+  0                                                       AS carousel_swipes,
+  0                                                       AS follows,
+  0                                                       AS lost_impressions,
+  0                                                       AS available_impressions,
+  SUM(COALESCE(active_view_viewable_impressions, 0))      AS viewable_impressions,
+  SUM(COALESCE(active_view_measurable_impressions, 0))    AS measurable_impressions
+
+FROM ${ref({schema: cqts_config.sourceDataset, name: "GOOGLECM_CM360_SR"})}
+WHERE date >= ${cqts_config.windowStart}
+  AND (media_cost > 0 OR impressions > 10 OR clicks > 5)
+  ${cqts_config.cm360ExcludeYahooDsp ? "AND LOWER(COALESCE(site, '')) <> 'yahoo dsp'" : ""}
+GROUP BY ALL

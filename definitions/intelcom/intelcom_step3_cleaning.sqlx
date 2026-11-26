@@ -8,13 +8,13 @@ config {
     partitionBy: "date",
     labels: { client: "intelcom" }
   },
-  description: "Client: Intelcom Dragonfly. Cleaning step - fills gaps between naming-convention levels (creative language falls back to the placement language, creative grouping to the placement grouping) and aggregates to the dashboard grain. Port of the DAT CTE of intelcom_dashboard_last_days."
+  description: "Client: Intelcom Dragonfly. Cleaning step - fills gaps between naming-convention levels (creative language falls back to the placement language, creative grouping to the placement grouping) and aggregates to the dashboard grain. Same logic as the DAT CTE of the other clients' scheduled queries."
 }
 
 -- No source-specific logic here: views are already chosen per source in step1.
 -- Client-specific exclusions (campaigns of another client, test campaigns, date
 -- clauses...) belong in this step's WHERE clause.
--- Dropped here (as in the scheduled query): l2_lob, l2_campaign_identifier,
+-- Dropped here (as in the other clients' scheduled queries): l2_lob, l2_campaign_identifier,
 -- l3_campaign_identifier, l3_lob; l2_language / l2_creative_grouping are only used
 -- as fallbacks.
 

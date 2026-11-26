@@ -16,6 +16,7 @@ client's data.
 | Hubblo          | `definitions/hubblo`    | `includes/hubblo_config.js`   | `hubblo`   | `partner_miq` (shared, filtered) | `hubblo_dataform`   | – (new client)               |
 | Trema           | `definitions/trema`     | `includes/trema_config.js`    | `trema`    | `partner_miq` (shared, filtered) | `trema_dataform`    | – (new client)               |
 | Intelcom Dragonfly | `definitions/intelcom` | `includes/intelcom_config.js` | `intelcom` | `intelcom_sr_etl` + `partner_miq` (shared, filtered) | `intelcom_dataform` | – (new client) |
+| CQTS            | `definitions/cqts`      | `includes/cqts_config.js`     | `cqts`     | `cqts_sr_etl` + `partner_miq` (shared, filtered) | `cqts_dataform`     | – (new client)               |
 
 ## Pipeline (per client)
 
@@ -171,3 +172,10 @@ backfill from the earliest date you want in the table.
   = token 7 for LinkedIn (the eplv fallback to token 5 is not kept: it returns MIQ-GNL).
 * **Google Ads publisher fallback** – `ggl-ads` when the campaign-name token is empty, so
   campaigns not named with the convention keep the SEM media type instead of Direct.
+
+## Decisions (CQTS, 2026-11-26)
+
+* **New client** – never built in BigQuery. Sources: CM360 (`cqts_sr_etl`, same model as
+  Unibroue, noise floor; Yahoo DSP exclusion off, no Yahoo site) and MiQ (Meta, TikTok,
+  Snapchat profiles of `cqts_config.miqProfileIds`, Meta token positions, no shift).
+* **Mediabox** – no `cqts` list yet: labels from the plusco lists.

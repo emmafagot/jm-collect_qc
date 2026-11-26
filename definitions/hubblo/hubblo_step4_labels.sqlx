@@ -8,7 +8,7 @@ config {
     partitionBy: "date",
     labels: { client: "hubblo" }
   },
-  description: "Client: Hubblo. Labels step - keeps every naming-convention code and adds its English display name (hubblo_lookup_shortcodes; the code itself when it has no label), the media type (channel_group) and the combined video + audio completions / views. Port of the JON CTE of hubblo_dashboard_last_days."
+  description: "Client: Hubblo. Labels step - keeps every naming-convention code and adds its English display name (hubblo_lookup_shortcodes; the code itself when it has no label), the media type (channel_group) and the combined video + audio completions / views. Same logic as the JON CTE of the other clients' scheduled queries."
 }
 
 -- Every lookup is a LEFT JOIN on (code, list): a code with no label keeps its row and

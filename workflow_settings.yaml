@@ -19,3 +19,4 @@ vars:
   hubblo_backfill_start: ""       # full history: "2026-04-08"
   trema_backfill_start: ""        # full history: "2026-06-16"
   intelcom_backfill_start: ""     # full history: "2026-09-01"
+  cqts_backfill_start: ""         # full history: "2026-11-02"

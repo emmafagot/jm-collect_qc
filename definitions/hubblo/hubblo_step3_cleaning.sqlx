@@ -8,7 +8,7 @@ config {
     partitionBy: "date",
     labels: { client: "hubblo" }
   },
-  description: "Client: Hubblo. Cleaning step - fills gaps between naming-convention levels (creative language falls back to the placement language, creative grouping to the placement grouping) and aggregates to the dashboard grain. Port of the DAT CTE of hubblo_dashboard_last_days."
+  description: "Client: Hubblo. Cleaning step - fills gaps between naming-convention levels (creative language falls back to the placement language, creative grouping to the placement grouping) and aggregates to the dashboard grain. Same logic as the DAT CTE of the other clients' scheduled queries."
 }
 
 -- No source-specific logic here: views are already chosen per source in step1.

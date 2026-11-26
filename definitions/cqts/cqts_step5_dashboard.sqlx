@@ -1,0 +1,123 @@
+config {
+  type: "incremental",
+  database: "jm-collect",
+  schema: "cqts_dataform",
+  tags: ["cqts"],
+  name: "dashboard",
+  // Holds history that the daily window never rebuilds: protected stops a
+  // "full refresh" from dropping the table and keeping only the current window.
+  protected: true,
+  bigquery: {
+    partitionBy: "date",
+    clusterBy: ["level_1", "level_2"],
+    labels: { client: "cqts" }
+  },
+  description: "Client: CQTS. Presentation step - client-facing dashboard table: every taxonomy dimension as code + English display name, schema modelled on cm-collect.aeroportqc_sr_etl.dashboard (plus publisher_code, without the *_disp columns). Each run deletes the processing window (includes/cqts_config.js) and re-inserts it from cqts_step4_labels; older rows are never touched."
+}
+
+pre_operations {
+  -- Delete the processing window before re-inserting it (daily: last 30 days + today;
+  -- backfill: everything from cqts_backfill_start).
+  ${when(incremental(),
+    `DELETE FROM ${self()} WHERE date >= ${cqts_config.windowStart}`)}
+}
+
+SELECT
+  -- --------------------------------------------------------------------- Calendar --
+  date,
+  functions.calendar_mon_week(date)                       AS week,
+  functions.calendar_month(date)                          AS month,
+  functions.calendar_quarter(date)                        AS quarter,
+  CAST(functions.calendar_year(date) AS STRING)           AS year,
+
+  -- ------------------------------------------------------------ Platform structure --
+  data_source,
+  account_id,
+  account,
+  advertiser_id,
+  advertiser,
+  level_1_id,
+  level_1,
+  level_2_id,
+  level_2,
+  level_3_id,
+  level_3,
+  plt_publisher_id,
+  plt_publisher,
+  campaign_type,
+  currency,
+
+  -- -------------------------------------------------------------------- Taxonomy --
+  client,
+  l1_lob,
+  campaign_identifier,
+  billing_id,
+  l2_objective_code,
+  l2_objective_en,
+  l2_product,
+  publisher_code,
+  publisher_en,
+  inventory_code,
+  inventory_en,
+  channel_group,
+  channel_code,
+  channel_en,
+  placement_location_code,
+  placement_location_en,
+  audience,
+  targeting_code,
+  targeting_en,
+  targeting_details_code,
+  targeting_details_en,
+  market_code,
+  market_en,
+  market_details,
+  device_code,
+  device_en,
+  buying_type,
+  creative_product_message,
+  version,
+  format_code,
+  format_en,
+  format_details_code,
+  format_details_en,
+  language_code,
+  language_en,
+  creative_grouping,
+  cta_code,
+  cta_en,
+  creative_flight_dates,
+
+  -- --------------------------------------------------------------------- Metrics --
+  SUM(media_spend)                                        AS media_spend,
+  CAST(SUM(impressions) AS INT64)                         AS impressions,
+  CAST(SUM(clicks) AS INT64)                              AS clicks,
+  CAST(SUM(completion_100) AS INT64)                      AS completion_100,
+  CAST(SUM(views) AS INT64)                               AS views,
+  CAST(SUM(video_completion_25) AS INT64)                 AS video_completion_25,
+  CAST(SUM(video_completion_50) AS INT64)                 AS video_completion_50,
+  CAST(SUM(video_completion_75) AS INT64)                 AS video_completion_75,
+  CAST(SUM(video_completion_95) AS INT64)                 AS video_completion_95,
+  CAST(SUM(video_completion_100) AS INT64)                AS video_completion_100,
+  CAST(SUM(video_views) AS INT64)                         AS video_views,
+  CAST(SUM(audio_completion_25) AS INT64)                 AS audio_completion_25,
+  CAST(SUM(audio_completion_50) AS INT64)                 AS audio_completion_50,
+  CAST(SUM(audio_completion_75) AS INT64)                 AS audio_completion_75,
+  CAST(SUM(audio_completion_100) AS INT64)                AS audio_completion_100,
+  CAST(SUM(audio_views) AS INT64)                         AS audio_views,
+  CAST(SUM(post_likes) AS INT64)                          AS post_likes,
+  CAST(SUM(post_engagements) AS INT64)                    AS post_engagements,
+  CAST(SUM(post_reactions) AS INT64)                      AS post_reactions,
+  CAST(SUM(post_comments) AS INT64)                       AS post_comments,
+  CAST(SUM(post_saves) AS INT64)                          AS post_saves,
+  CAST(SUM(post_shares) AS INT64)                         AS post_shares,
+  CAST(SUM(carousel_swipes) AS INT64)                     AS carousel_swipes,
+  CAST(SUM(follows) AS INT64)                             AS follows,
+  CAST(SUM(lost_impressions) AS INT64)                    AS lost_impressions,
+  CAST(SUM(available_impressions) AS INT64)               AS available_impressions,
+  CAST(SUM(viewable_impressions) AS INT64)                AS viewable_impressions,
+  CAST(SUM(measurable_impressions) AS INT64)              AS measurable_impressions
+
+FROM ${ref({schema: "cqts_dataform", name: "cqts_step4_labels"})}
+WHERE date >= ${cqts_config.windowStart}
+GROUP BY ALL
