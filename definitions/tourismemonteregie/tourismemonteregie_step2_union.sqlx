@@ -1,0 +1,23 @@
+config {
+  type: "table",
+  database: "jm-collect",
+  schema: "tourismemonteregie_dataform",
+  tags: ["tourismemonteregie"],
+  name: "tourismemonteregie_step2_union",
+  bigquery: {
+    partitionBy: "date",
+    clusterBy: ["data_source", "account_id"],
+    labels: { client: "tourismemonteregie" }
+  },
+  description: "Client: Tourisme Montérégie. Union step - every Tourisme Montérégie source for the processing window, standard columns only. Window only, rebuilt every run."
+}
+
+-- Each source is selected BY COLUMN NAME (media.selectStandardColumns), so a source
+-- model returning its columns in another order cannot shift values.
+-- To add a source: create tourismemonteregie_step1_<source>.sqlx and add its name below.
+
+${
+  ["tourismemonteregie_step1_cm360"]
+    .map(name => media.selectStandardColumns(ref({schema: "tourismemonteregie_dataform", name})))
+    .join("\n\nUNION ALL\n\n")
+}

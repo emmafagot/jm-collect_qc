@@ -1,0 +1,39 @@
+config {
+  type: "table",
+  database: "jm-collect",
+  schema: "bota_dataform",
+  tags: ["bota"],
+  name: "bota_lookup_shortcodes",
+  bigquery: { labels: { client: "bota" } },
+  description: "Client: Bota Bota. Lookup - English display names of Bota Bota's Mediabox shortcodes, plus the agency (plusco) lists Bota Bota has no list of its own for. One row per (list_name, shortcode)."
+}
+
+-- The only place where the shared shortcode table is read for this client: it is
+-- filtered to this client's lists first, so no other client's labels can leak.
+
+WITH client_lists AS (
+  -- Bota Bota's own lists
+  SELECT
+    LOWER(TRIM(list_name))                AS list_name,
+    LOWER(TRIM(shortcode))                AS shortcode,
+    MAX(shortcode_display_name_en)        AS name_en
+  FROM ${ref(qc_shared.shortcodes)}
+  WHERE LOWER(client_name) = '${bota_config.shortcodeClientName}'
+  GROUP BY 1, 2
+),
+
+agency_lists AS (
+  -- Agency lists, only for list names the client does not have
+  SELECT
+    LOWER(TRIM(list_name))                AS list_name,
+    LOWER(TRIM(shortcode))                AS shortcode,
+    MAX(shortcode_display_name_en)        AS name_en
+  FROM ${ref(qc_shared.shortcodes)}
+  WHERE LOWER(client_name) = '${qc_shared.agencyShortcodeClient}'
+    AND LOWER(TRIM(list_name)) NOT IN (SELECT DISTINCT list_name FROM client_lists)
+  GROUP BY 1, 2
+)
+
+SELECT * FROM client_lists
+UNION ALL
+SELECT * FROM agency_lists

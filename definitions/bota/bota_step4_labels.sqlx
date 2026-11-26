@@ -1,0 +1,149 @@
+config {
+  type: "table",
+  database: "jm-collect",
+  schema: "bota_dataform",
+  tags: ["bota"],
+  name: "bota_step4_labels",
+  bigquery: {
+    partitionBy: "date",
+    labels: { client: "bota" }
+  },
+  description: "Client: Bota Bota. Labels step - keeps every naming-convention code and adds its English display name (bota_lookup_shortcodes; the code itself when it has no label), the media type (channel_group) and the combined video + audio completions / views. Same logic as the JON CTE of the other clients' scheduled queries."
+}
+
+-- Every lookup is a LEFT JOIN on (code, list): a code with no label keeps its row and
+-- falls back to the code itself.
+
+SELECT
+  d.date,
+  d.data_source,
+  d.account_id,
+  d.account,
+  d.advertiser_id,
+  d.advertiser,
+  d.level_1_id,
+  d.level_1,
+  d.level_2_id,
+  d.level_2,
+  d.level_3_id,
+  d.level_3,
+  d.plt_publisher_id,
+  d.plt_publisher,
+  d.campaign_type,
+  d.currency,
+  d.client,
+  d.l1_lob,
+  d.campaign_identifier,
+  d.billing_id,
+
+  d.l2_objective                                          AS l2_objective_code,
+  COALESCE(obj.name_en, d.l2_objective)                   AS l2_objective_en,
+  d.l2_product,
+
+  d.publisher                                             AS publisher_code,
+  ${media.agencyDeskLabelEn("d.publisher", "pub.name_en")} AS publisher_en,
+
+  d.inventory                                             AS inventory_code,
+  ${media.agencyDeskLabelEn("d.inventory", "inv.name_en")} AS inventory_en,
+
+  ${media.channelGroup("d.data_source", "d.publisher")} AS channel_group,
+
+  d.channel                                               AS channel_code,
+  COALESCE(cha.name_en, d.channel)                        AS channel_en,
+
+  d.placement_location                                    AS placement_location_code,
+  COALESCE(plt.name_en, d.placement_location)             AS placement_location_en,
+
+  d.audience,
+
+  d.targeting                                             AS targeting_code,
+  COALESCE(tar.name_en, d.targeting)                      AS targeting_en,
+
+  d.targeting_details                                     AS targeting_details_code,
+  COALESCE(tgd.name_en, d.targeting_details)              AS targeting_details_en,
+
+  d.market                                                AS market_code,
+  COALESCE(mkt.name_en, d.market)                         AS market_en,
+
+  d.market_details,
+
+  d.device                                                AS device_code,
+  COALESCE(dev.name_en, d.device)                         AS device_en,
+
+  d.buying_type,
+  d.creative_product_message,
+  d.version,
+
+  d.format                                                AS format_code,
+  COALESCE(fmt.name_en, d.format)                         AS format_en,
+
+  d.format_details                                        AS format_details_code,
+  COALESCE(fmd.name_en, d.format_details)                 AS format_details_en,
+
+  d.language                                              AS language_code,
+  COALESCE(lan.name_en, d.language)                       AS language_en,
+
+  d.creative_grouping,
+
+  d.cta                                                   AS cta_code,
+  COALESCE(act.name_en, d.cta)                            AS cta_en,
+
+  d.creative_flight_dates,
+
+  -- --------------------------------------------------------------------- Metrics --
+  d.media_spend,
+  d.impressions,
+  d.clicks,
+  d.video_completion_100 + d.audio_completion_100         AS completion_100,
+  d.video_views + d.audio_views                           AS views,
+  d.video_completion_25,
+  d.video_completion_50,
+  d.video_completion_75,
+  d.video_completion_95,
+  d.video_completion_100,
+  d.video_views,
+  d.audio_completion_25,
+  d.audio_completion_50,
+  d.audio_completion_75,
+  d.audio_completion_100,
+  d.audio_views,
+  d.post_likes,
+  d.post_engagements,
+  d.post_reactions,
+  d.post_comments,
+  d.post_saves,
+  d.post_shares,
+  d.carousel_swipes,
+  d.follows,
+  d.lost_impressions,
+  d.available_impressions,
+  d.viewable_impressions,
+  d.measurable_impressions
+
+FROM ${ref({schema: "bota_dataform", name: "bota_step3_cleaning"})} AS d
+LEFT JOIN ${ref({schema: "bota_dataform", name: "bota_lookup_shortcodes"})} AS obj
+  ON d.l2_objective = obj.shortcode AND obj.list_name = 'tc_media_objective'
+LEFT JOIN ${ref({schema: "bota_dataform", name: "bota_lookup_shortcodes"})} AS pub
+  ON d.publisher = pub.shortcode AND pub.list_name = 'tc_publisher'
+LEFT JOIN ${ref({schema: "bota_dataform", name: "bota_lookup_shortcodes"})} AS inv
+  ON d.inventory = inv.shortcode AND inv.list_name = 'tc_inventory'
+LEFT JOIN ${ref({schema: "bota_dataform", name: "bota_lookup_shortcodes"})} AS cha
+  ON d.channel = cha.shortcode AND cha.list_name = 'pl_channel'
+LEFT JOIN ${ref({schema: "bota_dataform", name: "bota_lookup_shortcodes"})} AS plt
+  ON d.placement_location = plt.shortcode AND plt.list_name = 'pl_placement_location'
+LEFT JOIN ${ref({schema: "bota_dataform", name: "bota_lookup_shortcodes"})} AS tar
+  ON d.targeting = tar.shortcode AND tar.list_name = 'pl_tactic_category'
+LEFT JOIN ${ref({schema: "bota_dataform", name: "bota_lookup_shortcodes"})} AS tgd
+  ON d.targeting_details = tgd.shortcode AND tgd.list_name = 'pl_targeting'
+LEFT JOIN ${ref({schema: "bota_dataform", name: "bota_lookup_shortcodes"})} AS mkt
+  ON d.market = mkt.shortcode AND mkt.list_name = 'tc_market'
+LEFT JOIN ${ref({schema: "bota_dataform", name: "bota_lookup_shortcodes"})} AS dev
+  ON d.device = dev.shortcode AND dev.list_name = 'pl_device'
+LEFT JOIN ${ref({schema: "bota_dataform", name: "bota_lookup_shortcodes"})} AS fmt
+  ON d.format = fmt.shortcode AND fmt.list_name = 'pl_format'
+LEFT JOIN ${ref({schema: "bota_dataform", name: "bota_lookup_shortcodes"})} AS fmd
+  ON d.format_details = fmd.shortcode AND fmd.list_name = 'cr_format_details'
+LEFT JOIN ${ref({schema: "bota_dataform", name: "bota_lookup_shortcodes"})} AS lan
+  ON d.language = lan.shortcode AND lan.list_name = 'pl_language'
+LEFT JOIN ${ref({schema: "bota_dataform", name: "bota_lookup_shortcodes"})} AS act
+  ON d.cta = act.shortcode AND act.list_name = 'cr_cta'

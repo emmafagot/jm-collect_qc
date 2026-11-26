@@ -1,0 +1,74 @@
+config {
+  type: "table",
+  database: "jm-collect",
+  schema: "hec_dataform",
+  tags: ["hec"],
+  name: "hec_step3_cleaning",
+  bigquery: {
+    partitionBy: "date",
+    labels: { client: "hec" }
+  },
+  description: "Client: HEC Montréal. Cleaning step - fills gaps between naming-convention levels (creative language falls back to the placement language, creative grouping to the placement grouping) and aggregates to the dashboard grain. Same logic as the DAT CTE of the other clients' scheduled queries."
+}
+
+-- No source-specific logic here: views are already chosen per source in step1.
+-- Client-specific exclusions (campaigns of another client, test campaigns, date
+-- clauses...) belong in this step's WHERE clause.
+-- Dropped here (as in the other clients' scheduled queries): l2_lob, l2_campaign_identifier,
+-- l3_campaign_identifier, l3_lob; l2_language / l2_creative_grouping are only used
+-- as fallbacks.
+
+SELECT
+  date,
+  data_source,
+  account_id,
+  account,
+  advertiser_id,
+  advertiser,
+  level_1_id,
+  level_1,
+  level_2_id,
+  level_2,
+  level_3_id,
+  level_3,
+  plt_publisher_id,
+  plt_publisher,
+  campaign_type,
+  currency,
+  client,
+  l1_lob,
+  campaign_identifier,
+  l1_objective,
+  l1_year,
+  external_id,
+  billing_id,
+  l2_objective,
+  l2_product,
+  publisher,
+  inventory,
+  channel,
+  placement_location,
+  audience,
+  targeting,
+  targeting_details,
+  market,
+  market_details,
+  device,
+  buying_type,
+  creative_product_message,
+  version,
+  format,
+  format_details,
+  cta,
+  creative_flight_dates,
+
+  -- Creative language, else placement language.
+  COALESCE(NULLIF(l3_language, ''), l2_language)                   AS language,
+  -- Creative grouping, else placement grouping.
+  COALESCE(NULLIF(l3_creative_grouping, ''), l2_creative_grouping) AS creative_grouping,
+
+  ${media.sumMetrics()}
+
+FROM ${ref({schema: "hec_dataform", name: "hec_step2_union"})}
+WHERE date IS NOT NULL
+GROUP BY ALL

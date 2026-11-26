@@ -17,6 +17,14 @@ client's data.
 | Trema           | `definitions/trema`     | `includes/trema_config.js`    | `trema`    | `partner_miq` (shared, filtered) | `trema_dataform`    | – (new client)               |
 | Intelcom Dragonfly | `definitions/intelcom` | `includes/intelcom_config.js` | `intelcom` | `intelcom_sr_etl` + `partner_miq` (shared, filtered) | `intelcom_dataform` | – (new client) |
 | CQTS            | `definitions/cqts`      | `includes/cqts_config.js`     | `cqts`     | `cqts_sr_etl` + `partner_miq` (shared, filtered) | `cqts_dataform`     | – (new client)               |
+| CBCRA | `definitions/cbcra` | `includes/cbcra_config.js` | `cbcra` | `cbcra_sr_etl` + `partner_miq` (shared, filtered) | `cbcra_dataform` | – (new client) |
+| HEC Montréal | `definitions/hec` | `includes/hec_config.js` | `hec` | `hec_sr_etl` + `partner_miq` (shared, filtered) | `hec_dataform` | – (new client) |
+| Tourisme Gaspésie | `definitions/tourismegaspesie` | `includes/tourismegaspesie_config.js` | `tourismegaspesie` | `tourismegaspesie_sr_etl` | `tourismegaspesie_dataform` | – (new client) |
+| Cozey | `definitions/cozey` | `includes/cozey_config.js` | `cozey` | `cozey_sr_etl` | `cozey_dataform` | – (new client) |
+| Le Groupe Montoni | `definitions/montoni` | `includes/montoni_config.js` | `montoni` | `montoni_sr_etl` | `montoni_dataform` | – (new client) |
+| Bota Bota | `definitions/bota` | `includes/bota_config.js` | `bota` | `bota_sr_etl` | `bota_dataform` | – (new client) |
+| Tourisme Montérégie | `definitions/tourismemonteregie` | `includes/tourismemonteregie_config.js` | `tourismemonteregie` | `tourismemonteregie_sr_etl` | `tourismemonteregie_dataform` | – (new client) |
+| BPA | `definitions/bpa` | `includes/bpa_config.js` | `bpa` | `bpa_sr_etl` | `bpa_dataform` | – (new client) |
 
 ## Pipeline (per client)
 
@@ -170,8 +178,6 @@ backfill from the earliest date you want in the table.
 * **MiQ LinkedIn** – LinkedIn ad set names start with one extra token, so every ad set
   token is read one position further for LinkedIn rows (as in the eplv query). Placement
   = token 7 for LinkedIn (the eplv fallback to token 5 is not kept: it returns MIQ-GNL).
-* **Google Ads publisher fallback** – `ggl-ads` when the campaign-name token is empty, so
-  campaigns not named with the convention keep the SEM media type instead of Direct.
 
 ## Decisions (CQTS, 2026-11-26)
 
@@ -179,3 +185,26 @@ backfill from the earliest date you want in the table.
   Unibroue, noise floor; Yahoo DSP exclusion off, no Yahoo site) and MiQ (Meta, TikTok,
   Snapchat profiles of `cqts_config.miqProfileIds`, Meta token positions, no shift).
 * **Mediabox** – no `cqts` list yet: labels from the plusco lists.
+
+## Decisions (8 new clients, 2026-11-26)
+
+CBCRA, HEC Montréal, Tourisme Gaspésie, Cozey, Le Groupe Montoni, Bota Bota, Tourisme
+Montérégie, BPA: never built in BigQuery, generated from the existing step templates.
+
+* **CM360 excluded sites** – `cm360ExcludedSites` (list, `LOWER(site)`) replaces the
+  Yahoo DSP flag for these clients: CBCRA `miq`, `yahoo dsp`; Tourisme Gaspésie
+  `yahoo.ca`, `yahoo dsp`; Tourisme Montérégie `miq`, `media iq`.
+* **Google Ads L1 / L3 (Bota Bota)** – modelled on `sepaq_dash_ah_last_days` (cm-collect):
+  `googleAdsL1ChannelTypes` Search / Shopping / Performance Max at campaign level (L1,
+  Search naming), `googleAdsL3ChannelTypes` Display / Demand Gen at ad level
+  (`<tag>_step1_googleads_l3`, standard naming, token 6 = placement as is), plus Video
+  for Bota Bota (YouTube campaigns). GADL3 also holds Search, so the lists must not
+  overlap. Clients with L1 only read every campaign type (empty list).
+* **Tourisme Montérégie** – the `media iq` exclusion removes most of the CM360 spend
+  ($26,227): confirmed as intended (2026-11-26).
+* **No code-side taxonomy correction** – empty or misplaced naming tokens stay as read
+  (e.g. Yahoo lines without publisher -> media type Direct); the teams fix the names
+  in-platform.
+* **MiQ** – every new MiQ step uses the LinkedIn token shift of `intelcom_step1_miq` (no
+  effect on other platforms).
+* **Yahoo** – account set in config (`2340` / Jungle Media Canada), as for Groupe Marcelle.

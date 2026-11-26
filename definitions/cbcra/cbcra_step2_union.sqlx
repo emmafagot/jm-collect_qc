@@ -1,0 +1,26 @@
+config {
+  type: "table",
+  database: "jm-collect",
+  schema: "cbcra_dataform",
+  tags: ["cbcra"],
+  name: "cbcra_step2_union",
+  bigquery: {
+    partitionBy: "date",
+    clusterBy: ["data_source", "account_id"],
+    labels: { client: "cbcra" }
+  },
+  description: "Client: CBCRA. Union step - every CBCRA source for the processing window, standard columns only. Window only, rebuilt every run."
+}
+
+-- Each source is selected BY COLUMN NAME (media.selectStandardColumns), so a source
+-- model returning its columns in another order cannot shift values.
+-- To add a source: create cbcra_step1_<source>.sqlx and add its name below.
+
+${
+  ["cbcra_step1_cm360",
+   "cbcra_step1_meta",
+   "cbcra_step1_yahoo",
+   "cbcra_step1_miq"]
+    .map(name => media.selectStandardColumns(ref({schema: "cbcra_dataform", name})))
+    .join("\n\nUNION ALL\n\n")
+}

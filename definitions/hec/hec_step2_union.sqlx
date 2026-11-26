@@ -1,0 +1,24 @@
+config {
+  type: "table",
+  database: "jm-collect",
+  schema: "hec_dataform",
+  tags: ["hec"],
+  name: "hec_step2_union",
+  bigquery: {
+    partitionBy: "date",
+    clusterBy: ["data_source", "account_id"],
+    labels: { client: "hec" }
+  },
+  description: "Client: HEC Montréal. Union step - every HEC Montréal source for the processing window, standard columns only. Window only, rebuilt every run."
+}
+
+-- Each source is selected BY COLUMN NAME (media.selectStandardColumns), so a source
+-- model returning its columns in another order cannot shift values.
+-- To add a source: create hec_step1_<source>.sqlx and add its name below.
+
+${
+  ["hec_step1_yahoo",
+   "hec_step1_miq"]
+    .map(name => media.selectStandardColumns(ref({schema: "hec_dataform", name})))
+    .join("\n\nUNION ALL\n\n")
+}

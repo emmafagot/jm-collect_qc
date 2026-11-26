@@ -1,0 +1,25 @@
+config {
+  type: "table",
+  database: "jm-collect",
+  schema: "bota_dataform",
+  tags: ["bota"],
+  name: "bota_step2_union",
+  bigquery: {
+    partitionBy: "date",
+    clusterBy: ["data_source", "account_id"],
+    labels: { client: "bota" }
+  },
+  description: "Client: Bota Bota. Union step - every Bota Bota source for the processing window, standard columns only. Window only, rebuilt every run."
+}
+
+-- Each source is selected BY COLUMN NAME (media.selectStandardColumns), so a source
+-- model returning its columns in another order cannot shift values.
+-- To add a source: create bota_step1_<source>.sqlx and add its name below.
+
+${
+  ["bota_step1_googleads_l1",
+   "bota_step1_googleads_l3",
+   "bota_step1_tiktok"]
+    .map(name => media.selectStandardColumns(ref({schema: "bota_dataform", name})))
+    .join("\n\nUNION ALL\n\n")
+}

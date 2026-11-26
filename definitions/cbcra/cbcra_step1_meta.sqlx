@@ -1,0 +1,107 @@
+config {
+  type: "table",
+  database: "jm-collect",
+  schema: "cbcra_dataform",
+  tags: ["cbcra"],
+  name: "cbcra_step1_meta",
+  bigquery: { labels: { client: "cbcra" } },
+  description: "Client: CBCRA. Source step - Meta delivery for the processing window, mapped to the standard columns (includes/media.js). Same model as cbcra_step1_meta (client never built in BigQuery before Dataform)."
+}
+
+-- Rows kept: cost > 0, inside the processing window.
+
+SELECT
+  date                                                    AS date,
+  'meta'                                                  AS data_source,
+  COALESCE(CAST(profile_id AS STRING), '')                AS account_id,
+  COALESCE(profile, '')                                   AS account,
+  COALESCE(CAST(profile_id AS STRING), '')                AS advertiser_id,
+  COALESCE(profile, '')                                   AS advertiser,
+  COALESCE(CAST(campaign_id AS STRING), '')               AS level_1_id,
+  COALESCE(campaign_name, '')                             AS level_1,
+  COALESCE(CAST(ad_group_id AS STRING), '')               AS level_2_id,
+  COALESCE(ad_group_name, '')                             AS level_2,
+  COALESCE(CAST(ad_id AS STRING), '')                     AS level_3_id,
+  COALESCE(ad_name, '')                                   AS level_3,
+  ''                                                      AS plt_publisher_id,
+  COALESCE(publisher_platform, '')                        AS plt_publisher,
+  ''                                                      AS campaign_type,
+  ''                                                      AS currency,
+
+  -- ------------------------------------------------------------ Campaign name tokens --
+  functions.jm_tax_split(campaign_name, 0)                AS client,
+  functions.jm_tax_split(campaign_name, 1)                AS l1_lob,
+  functions.jm_tax_split(campaign_name, 2)                AS campaign_identifier,
+  functions.jm_tax_split(campaign_name, 3)                AS l1_objective,
+  functions.jm_tax_split(campaign_name, 4)                AS l1_year,
+  functions.jm_tax_split(campaign_name, 5)                AS external_id,
+  functions.jm_tax_split(campaign_name, 6)                AS billing_id,
+
+  -- ------------------------------------------------------------ Ad set name tokens --
+  functions.jm_tax_split(ad_group_name, 0)                AS l2_objective,
+  functions.jm_tax_split(ad_group_name, 1)                AS l2_product,
+  functions.jm_tax_split(ad_group_name, 2)                AS l2_lob,
+  functions.jm_tax_split(ad_group_name, 3)                AS l2_campaign_identifier,
+  functions.jm_tax_split(ad_group_name, 4)                AS publisher,
+  functions.jm_tax_split(ad_group_name, 5)                AS channel,
+  functions.jm_tax_split(ad_group_name, 6)                AS placement_location,
+  functions.jm_tax_split(ad_group_name, 7)                AS audience,
+  functions.jm_tax_split(ad_group_name, 8)                AS l2_language,
+  functions.jm_tax_split(ad_group_name, 9)                AS targeting,
+  functions.jm_tax_split(ad_group_name, 10)               AS targeting_details,
+  functions.jm_tax_split(ad_group_name, 11)               AS market,
+  functions.jm_tax_split(ad_group_name, 12)               AS market_details,
+  functions.jm_tax_split(ad_group_name, 13)               AS device,
+  functions.jm_tax_split(ad_group_name, 14)               AS buying_type,
+  functions.jm_tax_split(ad_group_name, 15)               AS l2_creative_grouping,
+  -- Meta inventory = the platform the ad ran on (facebook, instagram...).
+  COALESCE(publisher_platform, '')                        AS inventory,
+
+  -- ----------------------------------------------------------------- Ad name tokens --
+  functions.jm_tax_split(ad_name, 0)                      AS creative_product_message,
+  functions.jm_tax_split(ad_name, 1)                      AS version,
+  functions.jm_tax_split(ad_name, 2)                      AS format,
+  functions.jm_tax_split(ad_name, 3)                      AS format_details,
+  functions.jm_tax_split(ad_name, 4)                      AS l3_language,
+  functions.jm_tax_split(ad_name, 5)                      AS l3_creative_grouping,
+  functions.jm_tax_split(ad_name, 6)                      AS cta,
+  functions.jm_tax_split(ad_name, 7)                      AS creative_flight_dates,
+  functions.jm_tax_split(ad_name, 8)                      AS l3_campaign_identifier,
+  functions.jm_tax_split(ad_name, 9)                      AS l3_lob,
+
+  -- --------------------------------------------------------------------- Metrics --
+  SUM(COALESCE(cost, 0))                                  AS media_spend,
+  SUM(COALESCE(impressions, 0))                           AS impressions,
+  SUM(COALESCE(action_link_click, 0))                     AS clicks,
+
+  SUM(COALESCE(video_p_25_watched_actions, 0))            AS video_completion_25,
+  SUM(COALESCE(video_p_50_watched_actions, 0))            AS video_completion_50,
+  SUM(COALESCE(video_p_75_watched_actions, 0))            AS video_completion_75,
+  SUM(COALESCE(video_p_95_watched_actions, 0))            AS video_completion_95,
+  SUM(COALESCE(video_p_100_watched_actions, 0))           AS video_completion_100,
+  -- Views: Meta 3-second video views.
+  SUM(COALESCE(action_video_view, 0))                     AS video_views,
+
+  0                                                       AS audio_completion_25,
+  0                                                       AS audio_completion_50,
+  0                                                       AS audio_completion_75,
+  0                                                       AS audio_completion_100,
+  0                                                       AS audio_views,
+
+  0                                                       AS post_likes,
+  SUM(COALESCE(action_post_engagement, 0))                AS post_engagements,
+  SUM(COALESCE(action_post_like, 0))                      AS post_reactions,
+  SUM(COALESCE(action_comment, 0))                        AS post_comments,
+  SUM(COALESCE(post_save, 0))                             AS post_saves,
+  SUM(COALESCE(action_post, 0))                           AS post_shares,
+  0                                                       AS carousel_swipes,
+  0                                                       AS follows,
+  0                                                       AS lost_impressions,
+  0                                                       AS available_impressions,
+  0                                                       AS viewable_impressions,
+  0                                                       AS measurable_impressions
+
+FROM ${ref({schema: cbcra_config.sourceDataset, name: "FBADS_META_SR"})}
+WHERE date >= ${cbcra_config.windowStart}
+  AND cost > 0
+GROUP BY ALL

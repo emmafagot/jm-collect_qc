@@ -48,9 +48,7 @@ SELECT
   functions.jm_tax_split(campaign_name, 1)                AS l2_product,
   ''                                                      AS l2_lob,
   ''                                                      AS l2_campaign_identifier,
-  -- Fallback 'ggl-ads' when the token is empty (e.g. Performance Max campaigns not named
-  -- with the convention), so these rows keep the SEM media type instead of 'Direct'.
-  COALESCE(NULLIF(functions.jm_tax_split(campaign_name, 7), ''), 'ggl-ads') AS publisher,
+  functions.jm_tax_split(campaign_name, 7)                AS publisher,
   functions.jm_tax_split(campaign_name, 8)                AS channel,
   functions.jm_tax_split(campaign_name, 4)                AS placement_location,
   ''                                                      AS audience,

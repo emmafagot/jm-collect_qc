@@ -1,0 +1,23 @@
+config {
+  type: "table",
+  database: "jm-collect",
+  schema: "bpa_dataform",
+  tags: ["bpa"],
+  name: "bpa_step2_union",
+  bigquery: {
+    partitionBy: "date",
+    clusterBy: ["data_source", "account_id"],
+    labels: { client: "bpa" }
+  },
+  description: "Client: BPA. Union step - every BPA source for the processing window, standard columns only. Window only, rebuilt every run."
+}
+
+-- Each source is selected BY COLUMN NAME (media.selectStandardColumns), so a source
+-- model returning its columns in another order cannot shift values.
+-- To add a source: create bpa_step1_<source>.sqlx and add its name below.
+
+${
+  ["bpa_step1_googleads_l1"]
+    .map(name => media.selectStandardColumns(ref({schema: "bpa_dataform", name})))
+    .join("\n\nUNION ALL\n\n")
+}

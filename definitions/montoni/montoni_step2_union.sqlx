@@ -1,0 +1,24 @@
+config {
+  type: "table",
+  database: "jm-collect",
+  schema: "montoni_dataform",
+  tags: ["montoni"],
+  name: "montoni_step2_union",
+  bigquery: {
+    partitionBy: "date",
+    clusterBy: ["data_source", "account_id"],
+    labels: { client: "montoni" }
+  },
+  description: "Client: Le Groupe Montoni. Union step - every Le Groupe Montoni source for the processing window, standard columns only. Window only, rebuilt every run."
+}
+
+-- Each source is selected BY COLUMN NAME (media.selectStandardColumns), so a source
+-- model returning its columns in another order cannot shift values.
+-- To add a source: create montoni_step1_<source>.sqlx and add its name below.
+
+${
+  ["montoni_step1_googleads_l1",
+   "montoni_step1_yahoo"]
+    .map(name => media.selectStandardColumns(ref({schema: "montoni_dataform", name})))
+    .join("\n\nUNION ALL\n\n")
+}
